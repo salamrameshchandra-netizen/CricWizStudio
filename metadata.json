@@ -1,0 +1,6 @@
+{
+  "name": "Cricket Player Stats & Visualizer",
+  "description": "An interactive playground to convert cricketer stats (batsman & bowler) into responsive performance heatmaps, trend lines, head-to-head comparisons, and AI scouting reports.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
