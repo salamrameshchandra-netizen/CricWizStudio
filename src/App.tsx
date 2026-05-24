@@ -37,6 +37,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'compare' | 'import' | 'manual' | 'guide'>('dashboard');
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>(() => players[0]?.id || '');
   const [analyticSubTab, setAnalyticSubTab] = useState<'trends' | 'scout'>('trends');
+  const [dashboardMatchType, setDashboardMatchType] = useState<string>('All');
 
   const selectedPlayer = players.find(p => p.id === selectedPlayerId) || players[0];
   const activeAnalyticTab = analyticSubTab;
@@ -327,6 +328,7 @@ export default function App() {
               <thead>
                 <tr className="bg-slate-100 border-b border-slate-300 text-slate-700">
                   <th className="py-2 px-3 font-mono font-bold">Opponent</th>
+                  <th className="py-2 px-3 font-mono font-bold">Format</th>
                   <th className="py-2 px-3 font-mono font-bold">Date</th>
                   {selectedPlayer.type === 'batsman' ? (
                     <>
@@ -349,6 +351,7 @@ export default function App() {
                 {selectedPlayer.matches.map((m) => (
                   <tr key={m.id} className="border-b border-slate-200">
                     <td className="py-2.5 px-3 font-semibold">{m.opponent}</td>
+                    <td className="py-2.5 px-3 text-slate-500 font-mono text-[10px]">{m.matchType || 'T20'}</td>
                     <td className="py-2.5 px-3 text-slate-600">{m.date}</td>
                     {selectedPlayer.type === 'batsman' ? (
                       <>
@@ -780,90 +783,119 @@ export default function App() {
 
                     {/* Innings Log history editor */}
                     <div className="bg-[#1e293b] rounded-2xl border border-slate-700/80 p-5 shadow-sm space-y-3">
-                      <div className="flex justify-between items-center border-b pb-3 border-slate-700">
-                        <h3 className="font-bold text-slate-100 text-sm flex items-center gap-1.5">
-                          <History className="w-4 h-4 text-indigo-400" />
-                          Historical Innings Database Logs
-                        </h3>
-                        <span className="text-[10px] text-slate-400 font-semibold font-mono">
-                          {selectedPlayer.matches.length} matches logged
-                        </span>
+                      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 border-b pb-3 border-slate-700">
+                        <div className="space-y-0.5">
+                          <h3 className="font-bold text-slate-100 text-sm flex items-center gap-1.5 font-display">
+                            <History className="w-4 h-4 text-indigo-400" />
+                            Historical Innings Database Logs
+                          </h3>
+                          <p className="text-[10px] text-slate-400">
+                            Logged scorecard statistics & formats
+                          </p>
+                        </div>
+                        
+                        <div className="flex items-center gap-2 self-start sm:self-auto">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-mono">Format:</span>
+                          <select
+                            value={dashboardMatchType}
+                            onChange={(e) => setDashboardMatchType(e.target.value)}
+                            className="bg-slate-900 border border-slate-700 rounded-lg text-xs py-1 px-2.5 text-slate-200 focus:outline-[#6366f1] font-bold cursor-pointer"
+                          >
+                            <option value="All">All Formats</option>
+                            <option value="T20">T20</option>
+                            <option value="ODI">ODI</option>
+                            <option value="Test">Test Match</option>
+                          </select>
+                        </div>
                       </div>
 
-                      {selectedPlayer.matches.length === 0 ? (
-                        <div className="text-center py-8 text-xs text-slate-500 italic">
-                          No matchups recorded on profile log yet. Go to CSV Import or Manual tab to insert.
-                        </div>
-                      ) : (
-                        <div className="overflow-x-auto select-none">
-                          <table className="w-full text-xs text-left text-slate-400 border-collapse">
-                            <thead>
-                              <tr className="border-b border-slate-700 uppercase font-bold text-slate-400 bg-slate-900/60 text-[10px]">
-                                <th className="py-2.5 px-3 text-slate-300">Opponent</th>
-                                <th className="py-2.5 px-3 text-slate-300">Date</th>
-                                {selectedPlayer.type === 'batsman' ? (
-                                  <>
-                                    <th className="py-2.5 px-3 text-center text-slate-300">Runs</th>
-                                    <th className="py-2.5 px-3 text-center text-slate-300">Faced (b)</th>
-                                    <th className="py-2.5 px-3 text-center text-slate-300">Fours (4s)</th>
-                                    <th className="py-2.5 px-3 text-center text-slate-300">Sixes (6s)</th>
-                                    <th className="py-2.5 px-3 text-center text-slate-300">Out Status</th>
-                                  </>
-                                ) : (
-                                  <>
-                                    <th className="py-2.5 px-3 text-center text-slate-300">Overs</th>
-                                    <th className="py-2.5 px-3 text-center text-slate-300">Runs Con</th>
-                                    <th className="py-2.5 px-3 text-center text-slate-300">Tickets (W)</th>
-                                    <th className="py-2.5 px-3 text-center text-slate-300">Maidens</th>
-                                    <th className="py-2.5 px-3 text-center text-slate-300">Dots</th>
-                                  </>
-                                )}
-                                <th className="py-2.5 px-3 text-center text-slate-300">Remove</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {selectedPlayer.matches.map((m) => (
-                                <tr key={m.id} className="border-b border-slate-700/60 hover:bg-slate-800/40 transition-colors">
-                                  <td className="py-2.5 px-3 text-slate-200 font-bold">{m.opponent}</td>
-                                  <td className="py-2.5 px-3 font-mono text-[10px] text-slate-400">{m.date}</td>
+                      {(() => {
+                        const displayedMatches = selectedPlayer.matches.filter(m => {
+                          if (dashboardMatchType === 'All') return true;
+                          return m.matchType === dashboardMatchType;
+                        });
+
+                        return displayedMatches.length === 0 ? (
+                          <div className="text-center py-8 text-xs text-slate-500 italic">
+                            No {dashboardMatchType !== 'All' ? `${dashboardMatchType} ` : ''}matches recorded on profile log yet.
+                          </div>
+                        ) : (
+                          <div className="overflow-x-auto select-none">
+                            <table className="w-full text-xs text-left text-slate-400 border-collapse">
+                              <thead>
+                                <tr className="border-b border-slate-700 uppercase font-bold text-slate-400 bg-slate-900/60 text-[10px]">
+                                  <th className="py-2.5 px-3 text-slate-300">Opponent</th>
+                                  <th className="py-2.5 px-3 text-slate-300 text-center">Format</th>
+                                  <th className="py-2.5 px-3 text-slate-300">Date</th>
                                   {selectedPlayer.type === 'batsman' ? (
                                     <>
-                                      <td className="py-2.5 px-3 text-center font-bold text-indigo-400">{m.runs}</td>
-                                      <td className="py-2.5 px-3 text-center text-slate-300">{m.balls}</td>
-                                      <td className="py-2.5 px-3 text-center text-slate-300">{m.fours}</td>
-                                      <td className="py-2.5 px-3 text-center text-slate-300">{m.sixes}</td>
-                                      <td className="py-2.5 px-3 text-center">
-                                        <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
-                                          m.dismissed ? 'bg-rose-950/40 text-rose-400 border border-rose-900/10' : 'bg-emerald-950/40 text-emerald-400 border border-emerald-900/10'
-                                        }`}>
-                                          {m.dismissed ? 'Dismissed' : 'Not out'}
-                                        </span>
-                                      </td>
+                                      <th className="py-2.5 px-3 text-center text-slate-300">Runs</th>
+                                      <th className="py-2.5 px-3 text-center text-slate-300">Faced (b)</th>
+                                      <th className="py-2.5 px-3 text-center text-slate-300">Fours (4s)</th>
+                                      <th className="py-2.5 px-3 text-center text-slate-300">Sixes (6s)</th>
+                                      <th className="py-2.5 px-3 text-center text-slate-300">Out Status</th>
                                     </>
                                   ) : (
                                     <>
-                                      <td className="py-2.5 px-3 text-center text-slate-300">{m.overs}</td>
-                                      <td className="py-2.5 px-3 text-center text-rose-400 font-semibold">{m.runsConceded || m.runs}</td>
-                                      <td className="py-2.5 px-3 text-center font-extrabold text-emerald-400">{m.wickets}</td>
-                                      <td className="py-2.5 px-3 text-center text-slate-300">{m.maidens}</td>
-                                      <td className="py-2.5 px-3 text-center text-slate-300">{m.dots}</td>
+                                      <th className="py-2.5 px-3 text-center text-slate-300">Overs</th>
+                                      <th className="py-2.5 px-3 text-center text-slate-300">Runs Con</th>
+                                      <th className="py-2.5 px-3 text-center text-slate-300">Tickets (W)</th>
+                                      <th className="py-2.5 px-3 text-center text-slate-300">Maidens</th>
+                                      <th className="py-2.5 px-3 text-center text-slate-300">Dots</th>
                                     </>
                                   )}
-                                  <td className="py-2.5 px-3 text-center">
-                                    <button
-                                      onClick={() => handleDeleteMatchRow(m.id)}
-                                      className="p-1 rounded text-slate-400 hover:bg-rose-950/40 hover:text-rose-400 transition-all cursor-pointer"
-                                      title="Delete Row Match"
-                                    >
-                                      <X className="w-3.5 h-3.5" />
-                                    </button>
-                                  </td>
+                                  <th className="py-2.5 px-3 text-center text-slate-300">Remove</th>
                                 </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      )}
+                              </thead>
+                              <tbody>
+                                {displayedMatches.map((m) => (
+                                  <tr key={m.id} className="border-b border-slate-700/60 hover:bg-slate-800/40 transition-colors">
+                                    <td className="py-2.5 px-3 text-slate-200 font-bold">{m.opponent}</td>
+                                    <td className="py-2.5 px-3 text-center">
+                                      <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-950/60 text-indigo-400 border border-slate-800">
+                                        {m.matchType || 'T20'}
+                                      </span>
+                                    </td>
+                                    <td className="py-2.5 px-3 font-mono text-[10px] text-slate-400">{m.date}</td>
+                                    {selectedPlayer.type === 'batsman' ? (
+                                      <>
+                                        <td className="py-2.5 px-3 text-center font-bold text-indigo-400">{m.runs}</td>
+                                        <td className="py-2.5 px-3 text-center text-slate-300">{m.balls}</td>
+                                        <td className="py-2.5 px-3 text-center text-slate-300">{m.fours}</td>
+                                        <td className="py-2.5 px-3 text-center text-slate-300">{m.sixes}</td>
+                                        <td className="py-2.5 px-3 text-center">
+                                          <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
+                                            m.dismissed ? 'bg-rose-950/40 text-rose-400 border border-rose-900/10' : 'bg-emerald-950/40 text-emerald-400 border border-emerald-900/10'
+                                          }`}>
+                                            {m.dismissed ? 'Dismissed' : 'Not out'}
+                                          </span>
+                                        </td>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <td className="py-2.5 px-3 text-center text-slate-300">{m.overs}</td>
+                                        <td className="py-2.5 px-3 text-center text-rose-400 font-semibold">{m.runsConceded || m.runs}</td>
+                                        <td className="py-2.5 px-3 text-center font-extrabold text-emerald-400">{m.wickets}</td>
+                                        <td className="py-2.5 px-3 text-center text-slate-300">{m.maidens}</td>
+                                        <td className="py-2.5 px-3 text-center text-slate-300">{m.dots}</td>
+                                      </>
+                                    )}
+                                    <td className="py-2.5 px-3 text-center">
+                                      <button
+                                        onClick={() => handleDeleteMatchRow(m.id)}
+                                        className="p-1 rounded text-slate-400 hover:bg-rose-950/40 hover:text-rose-400 transition-all cursor-pointer"
+                                        title="Delete Row Match"
+                                      >
+                                        <X className="w-3.5 h-3.5" />
+                                      </button>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        );
+                      })()}
                     </div>
 
                   </div>

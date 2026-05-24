@@ -23,6 +23,7 @@ export default function ManualEntryForm({ players, onAddPlayer, onAddMatch }: Ma
   const [selectedPlayerId, setSelectedPlayerId] = useState(players[0]?.id || '');
   const [opponent, setOpponent] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [matchType, setMatchType] = useState<'T20' | 'ODI' | 'Test' | string>('T20');
   
   // Batsman score state
   const [batRuns, setBatRuns] = useState<number | ''>('');
@@ -66,6 +67,7 @@ export default function ManualEntryForm({ players, onAddPlayer, onAddMatch }: Ma
       id: `m-${Date.now()}`,
       opponent: opponent.trim(),
       date,
+      matchType,
     };
 
     if (selectedPlayer?.type === 'batsman') {
@@ -255,7 +257,7 @@ export default function ManualEntryForm({ players, onAddPlayer, onAddMatch }: Ma
             </div>
           ) : (
             <div className="space-y-6 max-w-2xl">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate-300 mb-1.5">Target Player</label>
                   <select
@@ -281,6 +283,19 @@ export default function ManualEntryForm({ players, onAddPlayer, onAddMatch }: Ma
                     onChange={(e) => setOpponent(e.target.value)}
                     className="w-full px-3 py-2 border border-slate-700 bg-slate-900 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/25 focus:border-indigo-500 placeholder-slate-500 text-slate-100"
                   />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">Match Type</label>
+                  <select
+                    value={matchType}
+                    onChange={(e) => setMatchType(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-700 bg-slate-900 rounded-xl text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/25 font-semibold"
+                  >
+                    <option value="T20">T20</option>
+                    <option value="ODI">ODI</option>
+                    <option value="Test">Test Match</option>
+                  </select>
                 </div>
 
                 <div>

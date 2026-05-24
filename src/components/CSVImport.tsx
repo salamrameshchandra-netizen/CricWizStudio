@@ -107,6 +107,8 @@ export default function CSVImport({ onImportComplete }: CSVImportProps) {
           obj.opponent = val;
         } else if (header.includes('date')) {
           obj.date = val;
+        } else if (header === 'matchtype' || header === 'format' || header === 'match type' || header === 'type') {
+          obj.matchType = val;
         } else if (header === 'runs' || header === 'runs scored' || header === 'r') {
           if (scoreType === 'batsman') obj.runs = Number(val) || 0;
           else obj.runsConceded = Number(val) || 0;
@@ -134,6 +136,7 @@ export default function CSVImport({ onImportComplete }: CSVImportProps) {
       // Assign default safety parameters
       if (!obj.opponent) obj.opponent = `Match ${i}`;
       if (!obj.date) obj.date = new Date(Date.now() - (lines.length - i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      if (!obj.matchType) obj.matchType = 'T20';
 
       logs.push(obj as MatchLog);
     }

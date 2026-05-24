@@ -2,6 +2,7 @@ export interface MatchLog {
   id: string;
   opponent: string;
   date: string;
+  matchType?: 'T20' | 'ODI' | 'Test' | string;
   runs?: number; // batsman runs or bowler conceded runs
   balls?: number; // batsman balls faced
   fours?: number; // batsman
